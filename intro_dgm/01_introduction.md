@@ -1,3 +1,5 @@
+翻译自：https://jmtomczak.github.io/blog/1/1_introduction.html
+
 # 引言
 
 ## 为什么选择生成模型？
@@ -82,7 +84,7 @@ $$
 
 ### 基于流的模型  
 
-变量代换公式通过可逆变换$f$ (Rippel & Adams, 2013)为表达随机变量的密度提供了原则性方法：
+变量变换公式通过可逆变换$f$ (Rippel & Adams, 2013)为表达随机变量的密度提供了原则性方法：
 $$
 p(\mathbf{x})=p(\mathbf{z}=f(\mathbf{x}))\left|\mathbf{J}_{f(\mathbf{x})}\right|
 $$
@@ -90,39 +92,84 @@ $$
 
 我们可以使用深度神经网络对$f$进行参数化，然而，它不能是任意的神经网络，因为我们必须能够计算雅可比矩阵。最早的尝试集中在volume-preserving的线性变换上，即$|\mathbf{J}_{f(\mathbf{x})}|=1$(Dinh et al., 2014; Tomczak & Welling, 2016)。进一步的尝试利用了矩阵行列式定理，得到了特定的非线性变换，即平面流(Rezende & Mohamed, 2015)和Sylvester流(van den Berg et al., 2018; Hoogeboom et al., 2020)。另一种方法侧重于为可逆变换构建容易计算雅可比行列式的变换层，如RealNVP(Dinh et al., 2016)。
 
+对于离散分布（例如整数）来说，概率质量函数没有volumn变化，因此变量变换公式为：
 
-
-对于离散分布（例如整数）来说，概率质量函数没有体积变化，因此变量变换公式为：
-
-\[ p(x) = p(z=f(x)) \]
-
-整数离散流（Integer discrete flows）提出使用带有舍入算子的仿射耦合层，以确保输出为整数值（Hoogeboom等人，2019）。对仿射耦合层的推广进一步在（Tomczak, 2020）中进行了研究。
+$$
+p(\mathbf{x})=p(\mathbf{z}=f(\mathbf{x})).
+$$
+整数离散流（Integer discrete flows）提出使用带有舍入算子的仿射耦合层，以确保输出为整数值(Hoogeboom et al., 2019)。对仿射耦合层的推广进一步在(Tomczak, 2020)中进行了研究。
 
 所有利用变量变换公式的生成模型都被称为基于流（flow-based）的模型。
 
+
+
 ### 潜变量模型
+
 潜变量模型背后的思想是假设一个低维的潜在空间，并进行如下的生成过程：
 
-\[ z \sim p(z), \quad x \sim p(x|z) \]
+$$
+\begin{aligned}
+& \mathbf{z} \sim p(\mathbf{z}) \\
+& \mathbf{x} \sim p(\mathbf{x} \mid \mathbf{z}).
+\end{aligned}
+$$
+换句话说，潜在变量对应于数据中的隐藏因素，而条件分布$p(\mathbf{x} \mid \mathbf{z})$可以视为一个生成器。
 
-换句话说，潜在变量对应于数据中的隐藏因素，而条件分布 \( p(x|z) \) 可以视为一个生成器。
+最广为人知的潜变量模型是概率主成分分析（pPCA）(Tipping & Bishop, 1999)，其中$p(\mathbf{z})$和$p(\mathbf{x} \mid \mathbf{z})$是高斯分布，且$\mathbf z$和$\mathbf x$之间的依赖关系是线性的。
 
-最广为人知的潜变量模型是概率主成分分析（pPCA）（Tipping & Bishop, 1999），其中 \( p(z) \) 和 \( p(x|z) \) 是高斯分布，且 \( z \) 和 \( x \) 之间的依赖关系是线性的。
+pPCA的非线性扩展是变分自编码器（VAE）框架 (Kingma & Welling, 2013; Rezende et al., 2014)，其中使用变分推断来近似后验$p(\mathbf z \mid \mathbf x)$，并使用神经网络对分布进行参数化。自从Kingma & Welling以及Rezende等人的开创性论文以来，VAE框架有了多次扩展，包括对更强大的变分后验(van den Berg et al., 2018; Kingma et al., 2016; Tomczak & Welling, 2016)、先验(Tomczak & Welling, 2018)和解码器(Gulrajani et al., 2016)的研究。一个有趣的方向是考虑不同的潜在空间拓扑结构，例如超球面潜在空 (Davidson et al., 2018)。在VAE和pPCA中，所有分布必须事先定义，因此它们被称为预定模型（prescribed models）。
 
-pPCA的非线性扩展是变分自编码器（VAE）框架（Kingma & Welling, 2013；Rezende等人，2014），其中使用变分推断来近似后验 \( q(z|x) \)，并使用神经网络对分布进行参数化。自从Kingma & Welling以及Rezende等人的开创性论文以来，VAE框架有了多次扩展，包括对更强大的变分后验（van den Berg等人，2018；Kingma等人，2016；Tomczak & Welling，2016）、先验（Tomczak & Welling，2018）和解码器（Gulrajani等人，2016）的研究。一个有趣的方向是考虑不同的潜在空间拓扑结构，例如超球面潜在空间（Davidson等人，2018）。在VAE和pPCA中，所有分布必须事先定义，因此它们被称为预定模型（prescribed models）。
+到目前为止，ARMs、流模型、pPCA和VAE都是概率模型，其目标函数是对数似然函数，且与使用Kullback-Leibler散度来衡量数据分布与模型分布的差异密切相关。另一种方法利用对抗性损失，其中判别器$D(\cdot)$用于区分真实数据和由生成器隐式生成的数据，即$p(\mathbf{x} \mid \mathbf{z})=\delta(\mathbf{x}-G(\mathbf{z}))$，其中$\delta(\cdot)$是狄拉克δ函数。这类模型被称为隐式模型，而生成对抗网络（GANs）(Goodfellow et al., 2014)成为生成逼真物体（如图像）的最成功的深度生成模型之一。
 
-到目前为止，ARMs、流模型、pPCA和VAE都是概率模型，其目标函数是对数似然函数，且与使用Kullback-Leibler散度来衡量数据分布与模型分布的差异密切相关。另一种方法利用对抗性损失，其中判别器 \( D(\cdot) \) 用于区分真实数据和由生成器隐式生成的数据，即 \( p(x|z) = \delta(x - G(z)) \)，其中 \( \delta(\cdot) \) 是狄拉克δ函数。这类模型被称为隐式模型，而生成对抗网络（GANs）（Goodfellow等人，2014）成为生成逼真物体（如图像）的最成功的深度生成模型之一。
+
 
 ### 概述
+
 在表1中，我们根据训练稳定性、计算似然函数的能力以及在有损或无损压缩中的直接适用性等任意标准对三类模型（包括隐式潜变量模型和预定潜变量模型）进行了比较。
 
-所有基于似然的模型（即ARMs、流模型和预定模型如VAE）都可以稳定训练，而隐式模型如GANs则存在不稳定性。在非线性预定模型如VAE中，必须注意的是，似然函数不能被精确计算，只能提供一个下界。ARMs是最好的基于似然的模型之一，但由于生成新内容时的自回归方式，其采样过程非常慢。其他方法相对较快。在有损压缩的情况下，VAE模型允许我们使用瓶颈（即潜在空间）。另一方面，ARMs和流模型可以用于无损压缩，因为它们是密度估计器，并提供精确的似然值。隐式模型不能直接用于压缩，但最近的研究使用GANs来改进图像压缩。
+所有基于似然的模型（即ARMs、流模型和预定模型如VAE）都可以稳定训练，而隐式模型如GANs则存在不稳定性。在非线性预定模型如VAE中，必须注意的是，似然函数不能被精确计算，只能提供一个下界。ARMs是最好的基于似然的模型之一，但由于生成新内容时的自回归方式，其采样过程非常慢，其他方法相对较快。在有损压缩的情况下，VAE模型允许我们使用瓶颈（即潜在空间）。另一方面，ARMs和流模型可以用于无损压缩，因为它们是密度估计器，并提供精确的似然值。隐式模型不能直接用于压缩，但最近的研究使用GANs来改进图像压缩。
 
-表1：深度生成模型的比较
+**表1**：深度生成模型的比较
 
-| 生成模型           | 训练   | 似然函数 | 采样  | 有损压缩 | 无损压缩 |
-| ------------------ | ------ | -------- | ----- | -------- | -------- |
-| 自回归模型（ARMs） | 稳定   | 精确     | 慢    | 否       | 是       |
-| 基于流的模型       | 稳定   | 精确     | 快/慢 | 否       | 是       |
-| 隐式模型           | 不稳定 | 否       | 快    | 否       | 否       |
-| 预定模型（VAE）    | 稳定   | 近似     | 快    | 是       | 否       |
+| 生成模型              | 训练   | 似然函数 | 采样  | 有损压缩 | 无损压缩 |
+| --------------------- | ------ | -------- | ----- | -------- | -------- |
+| Autoregressive models | 稳定   | 精确     | 慢    | 否       | 是       |
+| Flow-based models     | 稳定   | 精确     | 快/慢 | 否       | 是       |
+| Implicit models       | 不稳定 | 否       | 快    | 否       | 否       |
+| Prescribed model      | 稳定   | 近似     | 快    | 是       | 否       |
+
+
+
+## 引用
+
+1. Bauer, Matthias, and Andriy Mnih. "Resampled priors for variational autoencoders." In The 22nd International Conference on Artificial Intelligence and Statistics, pp. 66-75. PMLR, 2019. [(Bauer & Mnih, 2019)].
+2. van den Berg, Rianne, Leonard Hasenclever, Jakub M. Tomczak, and Max Welling. "Sylvester normalizing flows for variational inference." In 34th Conference on Uncertainty in Artificial Intelligence 2018, UAI 2018, pp. 393-402. Association For Uncertainty in Artificial Intelligence (AUAI), 2018. [(van den Berg et al., 2018)].
+3. Bishop, Christopher M. "Model-based machine learning." Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences 371, no. 1984 (2013). [(Bishop, 2013)].
+4. Bowman, Samuel R., Luke Vilnis, Oriol Vinyals, Andrew M. Dai, Rafal Jozefowicz, and Samy Bengio. "Generating sentences from a continuous space." arXiv preprint arXiv:1511.06349 (2015). [(Bowman et al., 2015)].
+5. Davidson, Tim R., Luca Falorsi, Nicola De Cao, Thomas Kipf, and Jakub M. Tomczak. "Hyperspherical variational auto-encoders." In 34th Conference on Uncertainty in Artificial Intelligence 2018, UAI 2018, pp. 856-865. Association For Uncertainty in Artificial Intelligence (AUAI), 2018. [(Davidson et al., 2018)].
+6. Dinh, Laurent, David Krueger, and Yoshua Bengio. "NICE: Non-linear independent components estimation." arXiv preprint arXiv:1410.8516 (2014). [(Dinh et al., 2014)].
+7. Dinh, Laurent, Jascha Sohl-Dickstein, and Samy Bengio. "Density estimation using real nvp." arXiv preprint arXiv:1605.08803 (2016). [(Dinh et al., 2016)].
+8. Ghahramani, Zoubin. "Probabilistic machine learning and artificial intelligence." Nature 521, no. 7553 (2015): 452-459. [(Ghahramani, 2015)].
+9. Goodfellow, Ian, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. "Generative adversarial nets." In Advances in neural information processing systems, pp. 2672-2680. (2014). [(Goodfellow et al., 2014)].
+10. Gulrajani, Ishaan, Kundan Kumar, Faruk Ahmed, Adrien Ali Taiga, Francesco Visin, David Vazquez, and Aaron Courville. "PixelVAE: A latent variable model for natural images." arXiv preprint arXiv:1611.05013 (2016). [(Gulrajani et al., 2016)].
+11. Ha, David, and Jurgen Schmidhuber. "World models." arXiv preprint arXiv:1803.10122 (2018). [(Ha & Schmidhuber, 2018)].
+12. Hinton, Geoffrey E., and Zoubin Ghahramani. "Generative models for discovering sparse distributed representations." Philosophical Transactions of the Royal Society of London. Series B: Biological Sciences 352, no. 1358 (1997): 1177-1190. [(Hinton & Ghahramani, 1997)].
+13. Ho, Jonathan, Ajay Jain, and Pieter Abbeel. "Denoising diffusion probabilistic models." Advances in Neural Information Processing Systems 33 (2020). [(Ho et al., 2020)].
+14. Hoogeboom, Emiel, Jorn Peters, Rianne van den Berg, and Max Welling. "Integer discrete flows and lossless compression." In Advances in Neural Information Processing Systems, pp. 12134-12144. 2019. [(Hoogeboom et al., 2019)].
+15. Hoogeboom, Emiel, Victor Garcia Satorras, Jakub M. Tomczak, and Max Welling. "The Convolution Exponential and Generalized Sylvester Flows." arXiv preprint arXiv:2006.01910 (2020). [(Hoogeboom et al., 2020)].
+16. Ilse, Maximilian, Jakub M. Tomczak, Christos Louizos, and Max Welling. "DIVA: Domain invariant variational autoencoders." In Medical Imaging with Deep Learning, pp. 322-348. PMLR, 2020. [(Ilse et al., 2020)].
+17. Kingma, Diederik P., and Max Welling. "Auto-encoding variational bayes." arXiv preprint arXiv:1312.6114 (2013). [(Kingma & Welling, 2013)].
+18. Kingma, Durk P., Tim Salimans, Rafal Jozefowicz, Xi Chen, Ilya Sutskever, and Max Welling. "Improved variational inference with inverse autoregressive flow." Advances in neural information processing systems 29 (2016): 4743-4751. [(Kingma et al., 2016)].
+19. Lasserre, Julia A., Christopher M. Bishop, and Thomas P. Minka. "Principled hybrids of generative and discriminative models." In 2006 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR'06), vol. 1, pp. 87-94. IEEE, 2006. [(Lasserre et al., 2006)].
+20. van den Oord, Aaron, Sander Dieleman, Heiga Zen, Karen Simonyan, Oriol Vinyals, Alex Graves, Nal Kalchbrenner, Andrew Senior, and Koray Kavukcuoglu. "Wavenet: A generative model for raw audio." arXiv preprint arXiv:1609.03499 (2016). [(v.d. Oord et al., 2016a)].
+21. van Den Oord, Aaron, Nal Kalchbrenner, and Koray Kavukcuoglu. "Pixel recurrent neural networks." In Proceedings of the 33rd International Conference on International Conference on Machine Learning-Volume 48, pp. 1747-1756. (2016). [(v.d. Oord et al., 2016b)].
+22. Rezende, Danilo Jimenez, Shakir Mohamed, and Daan Wierstra. "Stochastic backpropagation and approximate inference in deep generative models." arXiv preprint arXiv:1401.4082 (2014). [(Rezende et al., 2013)].
+23. Rezende, Danilo Jimenez, and Shakir Mohamed. "Variational inference with normalizing flows." arXiv preprint arXiv:1505.05770 (2015). [(Rezende & Mohamed, 2015)].
+24. Rippel, Oren, and Ryan Prescott Adams. "High-dimensional probability estimation with deep density models." arXiv preprint arXiv:1302.5125 (2013). [(Rippel & Adams, 2013)].
+25. Simonovsky, Martin, and Nikos Komodakis. "Graphvae: Towards generation of small graphs using variational autoencoders." In International Conference on Artificial Neural Networks, pp. 412-422. Springer, Cham, 2018. [(Simonovsky & Komodakis, 2018)].
+26. Sinha, Samarth, Sayna Ebrahimi, and Trevor Darrell. "Variational adversarial active learning." In Proceedings of the IEEE International Conference on Computer Vision, pp. 5972-5981. 2019. [(Sinha et al., 2019)].
+27. Szegedy, Christian, Wojciech Zaremba, Ilya Sutskever, Joan Bruna, Dumitru Erhan, Ian Goodfellow, and Rob Fergus. "Intriguing properties of neural networks." arXiv preprint arXiv:1312.6199 (2013). [(Szegedy et al., 2013)].
+28. Tipping, Michael E., and Christopher M. Bishop. "Probabilistic principal component analysis." Journal of the Royal Statistical Society: Series B (Statistical Methodology) 61, no. 3 (1999): 611-622. [(Tipping & Bishop, 1999)].
+29. Tomczak, Jakub M., and Max Welling. "Improving variational auto-encoders using householder flow." arXiv preprint arXiv:1611.09630 (2016). [(Tomczak & Welling, 2016)].
+30. Tomczak, Jakub, and Max Welling. "VAE with a VampPrior." In International Conference on Artificial Intelligence and Statistics, pp. 1214-1223. PMLR, 2018. [(Tomczak & Welling, 2018)].
+31. Tomczak, Jakub M. "General Invertible Transformations for Flow-based Generative Modeling." arXiv preprint arXiv:2011.15056 (2020). [(Tomczak, 2020)].
